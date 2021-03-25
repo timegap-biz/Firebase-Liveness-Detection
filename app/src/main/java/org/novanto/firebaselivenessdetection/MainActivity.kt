@@ -15,9 +15,9 @@ class MainActivity : AppCompatActivity() {
 
         val livenessApp = LivenessApp.Builder(this)
             .setDebugMode(false)
-            .setMotionInstruction("Lihat ke kiri", "Lihat ke kanan")
-            .setSuccessText("Berhasil! Silahkan lihat ke kamera lagi untuk mengambil foto")
-            .setInstructions("Lihat ke kamera dan tempatkan wajah pada lingakaran hijau")
+            .setMotionInstruction("Look to the left", "Look to the right")
+            .setSuccessText("Liveness Detection Success! Please look at the camera to take picture")
+            .setInstructions("Look at the camera and follow the instructions")
             .build()
 
         buttonStart.setOnClickListener {
