@@ -4,11 +4,10 @@ import android.Manifest
 import android.arch.lifecycle.Observer
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
+import android.support.v7.app.AppCompatActivity
 import android.util.Log
-import android.widget.Toast
 import id.privy.livenessfirebasesdk.common.*
 import id.privy.livenessfirebasesdk.event.LivenessEventProvider
 import id.privy.livenessfirebasesdk.vision.VisionDetectionProcessor
@@ -16,6 +15,9 @@ import id.privy.livenessfirebasesdk.vision.VisionDetectionProcessor.Motion
 import kotlinx.android.synthetic.main.activity_simple_liveness.*
 import java.io.IOException
 import java.util.*
+import android.graphics.*
+import android.graphics.Bitmap.createBitmap
+
 
 class SimpleLivenessActivity : AppCompatActivity() {
 
@@ -48,7 +50,10 @@ class SimpleLivenessActivity : AppCompatActivity() {
             val b = intent.extras!!
             successText = b.getString(Constant.Keys.SUCCESS_TEXT, getString(R.string.success_text))
             isDebug = b.getBoolean(Constant.Keys.IS_DEBUG, false)
-            instructions.text = b.getString(Constant.Keys.INSTRUCTION_TEXT, getString(R.string.instructions))
+            instructions.text = b.getString(
+                Constant.Keys.INSTRUCTION_TEXT,
+                getString(R.string.instructions)
+            )
             motionInstructions = b.getStringArray(Constant.Keys.MOTION_INSTRUCTIONS)
         }
 
@@ -57,7 +62,12 @@ class SimpleLivenessActivity : AppCompatActivity() {
             startHeadShakeChallenge()
         }
         else {
-            PermissionUtil.requestPermission(this, 1, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA)
+            PermissionUtil.requestPermission(
+                this,
+                1,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.CAMERA
+            )
         }
 
         LivenessEventProvider.getEventLiveData().observe(this, Observer {
@@ -75,7 +85,11 @@ class SimpleLivenessActivity : AppCompatActivity() {
         })
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         createCameraSource()
     }
@@ -174,11 +188,32 @@ class SimpleLivenessActivity : AppCompatActivity() {
     private fun onDefaultEvent() {
         if (success) {
             Handler().postDelayed({
-                cameraSource!!.takePicture(null, com.google.android.gms.vision.CameraSource.PictureCallback {
-                    navigateBack(true, BitmapFactory.decodeByteArray(it, 0, it.size))
-                })
+                cameraSource!!.takePicture(
+                    null,
+                    {
+                        var bitmap: Bitmap = BitmapFactory.decodeByteArray(it, 0, it.size)
+                        if (bitmap.height > bitmap.width){
+                            bitmap = rotate(BitmapFactory.decodeByteArray(it, 0, it.size), bitmap.width,height = bitmap.height, degrees = 90F)!!
+                        }
+                        navigateBack(true, bitmap)
+                    })
             }, 500)
         }
     }
-
 }
+
+fun rotate(bitmap: Bitmap?, width: Int, height: Int, degrees: Float = 180F): Bitmap? {
+    val matrix = Matrix()
+    matrix.postRotate(degrees)
+
+    return createBitmap(
+        bitmap, // source bitmap
+        0, // x coordinate of the first pixel in source
+        0, // y coordinate of the first pixel in source
+        width, // The number of pixels in each row
+        height, // The number of rows
+        matrix, // Optional matrix to be applied to the pixels
+        false // true if the source should be filtered
+    )
+}
+
